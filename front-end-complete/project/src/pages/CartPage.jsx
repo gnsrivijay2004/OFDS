@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { v4 as uuidv4 } from 'uuid';
 
 function CartPage() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [deliveryAddress, setDeliveryAddress] = useState(state.user?.address || '');
 
   const handleAddToCart = (item) => {
     dispatch({
@@ -33,26 +35,24 @@ function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (state.cart.length === 0) return;
+    if (!deliveryAddress) {
+      setError('Please enter a delivery address.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      const idempotencyKey = uuidv4();
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`
+          Authorization: `Bearer ${getToken()}`,
+          'Idempotency-Key': idempotencyKey
         },
         body: JSON.stringify({
           restaurantId: state.cartRestaurant.id,
-          items: state.cart.map(item => ({
-            id: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          total,
-          deliveryFee,
-          tax
+          deliveryAddress,
         })
       });
       if (!res.ok) throw new Error('Failed to place order');
@@ -233,6 +233,20 @@ function CartPage() {
                   </div>
                 </div>
               )}
+
+              <div className="mb-3">
+                <label className="form-label fw-medium text-gray-700">
+                  Delivery Address
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={deliveryAddress}
+                  onChange={e => setDeliveryAddress(e.target.value)}
+                  placeholder="Enter delivery address"
+                  disabled={loading}
+                />
+              </div>
 
               <button
                 onClick={handlePlaceOrder}
