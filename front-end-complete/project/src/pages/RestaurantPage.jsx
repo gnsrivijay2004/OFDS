@@ -10,22 +10,46 @@ function RestaurantPage() {
   const [menu, setMenu] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState(null);
+  const [restaurant, setRestaurant] = useState(null);
+  const [restaurantLoading, setRestaurantLoading] = useState(true);
+  const [restaurantError, setRestaurantError] = useState(null);
 
-  const restaurant = state.restaurants.find(r => r.id === parseInt(id));
   const cartItemsCount = state.cart.reduce((total, item) => total + item.quantity, 0);
 
-  // Fetch menu from backend if not present
+  // Helper to get JWT from localStorage
+  const getToken = () => localStorage.getItem('jwt');
+
+  // Fetch restaurant data from backend
+  useEffect(() => {
+    const fetchRestaurant = async () => {
+      setRestaurantLoading(true);
+      setRestaurantError(null);
+      try {
+        const res = await fetch(`/api/restaurants/${id}`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch restaurant');
+        const data = await res.json();
+        setRestaurant(data);
+      } catch (err) {
+        setRestaurantError(err.message);
+      } finally {
+        setRestaurantLoading(false);
+      }
+    };
+    fetchRestaurant();
+  }, [id]);
+
+  // Fetch menu from backend
   useEffect(() => {
     const fetchMenu = async () => {
       if (!restaurant) return;
-      if (restaurant.menu && restaurant.menu.length > 0) {
-        setMenu(restaurant.menu);
-        return;
-      }
       setMenuLoading(true);
       setMenuError(null);
       try {
-        const res = await fetch(`/api/menu/restaurant/${restaurant.id}`);
+        const res = await fetch(`/api/menu/restaurant/${restaurant.id}`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
         if (!res.ok) throw new Error('Failed to fetch menu');
         const data = await res.json();
         setMenu(data);
@@ -38,11 +62,25 @@ function RestaurantPage() {
     fetchMenu();
   }, [restaurant]);
 
-  if (!restaurant) {
+  if (restaurantLoading) {
+    return (
+      <div className="min-h-screen d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <div className="spinner-border text-orange-500" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-gray-600">Loading restaurant...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (restaurantError || !restaurant) {
     return (
       <div className="min-h-screen d-flex align-items-center justify-content-center">
         <div className="text-center">
           <h2 className="h3 fw-bold text-gray-900 mb-3">Restaurant not found</h2>
+          <p className="text-gray-600 mb-3">{restaurantError || 'The restaurant you are looking for does not exist.'}</p>
           <Link to="/main" className="text-orange-500 text-decoration-none">
             Go back to main page
           </Link>

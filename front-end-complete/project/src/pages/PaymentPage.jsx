@@ -70,7 +70,7 @@ function PaymentPage() {
       // 2. Confirm payment (simulate for card/upi, skip for COD)
       if (paymentMethod !== 'cod') {
         const confirmRes = await fetch('/api/payments/confirm', {
-          method: 'PUT',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${getToken()}`

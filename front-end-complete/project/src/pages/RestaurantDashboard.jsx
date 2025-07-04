@@ -81,25 +81,43 @@ function RestaurantDashboard() {
     setLoading(true);
     setError(null);
     try {
+      const token = getToken();
+      const requestBody = {
+        ...newItem,
+        price: parseInt(newItem.price),
+        isVeg: newItem.isVeg === 'yes',
+        restaurantId
+      };
+      
+      console.log('Adding menu item:', requestBody);
+      console.log('Token:', token ? 'Present' : 'Missing');
+      console.log('Restaurant ID:', restaurantId);
+      
       const res = await fetch('/api/menu/restaurant', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...newItem,
-          price: parseInt(newItem.price),
-          isVeg: newItem.isVeg === 'yes',
-          restaurantId
-        })
+        body: JSON.stringify(requestBody)
       });
-      if (!res.ok) throw new Error('Failed to add menu item');
+      
+      console.log('Response status:', res.status);
+      console.log('Response ok:', res.ok);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.log('Error response:', errorText);
+        throw new Error(`Failed to add menu item: ${res.status} ${errorText}`);
+      }
+      
       const added = await res.json();
+      console.log('Added item:', added);
       setMenu(prev => [...prev, added]);
       setNewItem({ name: '', isVeg: 'yes', price: '', description: '' });
       setShowAddForm(false);
     } catch (err) {
+      console.error('Error adding menu item:', err);
       setError(err.message);
     } finally {
       setLoading(false);

@@ -127,6 +127,15 @@ function MainPage() {
           <h2 className="h3 fw-bold text-gray-900 mb-4">
             {searchTerm ? `Results for "${searchTerm}"` : 'Popular Restaurants'}
           </h2>
+          {filteredRestaurants.length === 0 && !searchTerm && !state.loading && (
+            <div className="text-center py-5">
+              <div className="text-gray-400 mb-3">
+                <Utensils size={64} className="mx-auto" />
+              </div>
+              <h3 className="h5 fw-semibold text-gray-700 mb-2">No restaurants available</h3>
+              <p className="text-gray-500">Restaurant listing feature is not yet implemented</p>
+            </div>
+          )}
           <div className="row g-4">
             {filteredRestaurants.map((restaurant) => (
               <div key={restaurant.id} className="col-md-6 col-lg-4">

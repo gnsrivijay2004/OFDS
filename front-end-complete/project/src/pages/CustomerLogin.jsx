@@ -32,7 +32,7 @@ function CustomerLogin() {
       });
       if (!res.ok) throw new Error('Invalid email or password');
       const data = await res.json();
-      // Assume backend returns { token, user }
+      // IMPORTANT: Ensure backend returns { token: ... } in response
       localStorage.setItem('jwt', data.token);
       dispatch({
         type: 'LOGIN',

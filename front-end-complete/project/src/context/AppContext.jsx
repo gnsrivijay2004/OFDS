@@ -151,16 +151,14 @@ const API_BASE = '/api';
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Fetch restaurants from backend
+  // Fetch restaurants from backend (only for customer view)
   const fetchRestaurants = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const res = await fetch(`${API_BASE}/restaurants`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      if (!res.ok) throw new Error('Failed to fetch restaurants');
-      const data = await res.json();
-      dispatch({ type: 'SET_RESTAURANTS', payload: data });
+      // This endpoint doesn't exist in the backend - restaurants are fetched individually
+      // For now, we'll skip this call to avoid 404 errors
+      console.log('Skipping fetchRestaurants - endpoint not implemented in backend');
+      dispatch({ type: 'SET_RESTAURANTS', payload: [] });
     } catch (err) {
       dispatch({ type: 'SET_ERROR', payload: err.message });
     } finally {
@@ -202,11 +200,10 @@ export function AppProvider({ children }) {
     }
   };
 
-  // On mount, fetch restaurants if not loaded
+  // On mount, don't fetch restaurants automatically
+  // Restaurants will be fetched when needed by individual components
   useEffect(() => {
-    if (state.restaurants.length === 0) {
-      fetchRestaurants();
-    }
+    // No automatic restaurant fetching
   }, []);
 
   return (
